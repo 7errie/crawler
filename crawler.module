@@ -1,0 +1,251 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * A module exemplifying Drupal coding practices and APIs.
+ *
+ * This module provides a block that lists all of the
+ * installed modules. It illustrates coding standards,
+ * practices, and API use for Drupal 7.
+ */
+
+/**
+ * Implements hook_block_info().
+ */ 
+
+function crawler_block_info() {
+  $blocks = array();
+
+  $blocks['gbif_map_distribution'] = array(
+    'info' => t('GBIF distribution map for specific species.'),
+    'cache' => DRUPAL_CACHE_PER_PAGE,
+  );
+  
+  $blocks['external_link'] = array(
+    'info' => t('External links related to a specific species.'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  
+  $blocks['publication'] = array(
+    'info' => t('Publications related to a specific species.'),
+  );
+  
+    $blocks['iucn_red_list'] = array(
+    'info' => t('IUCN Red List for a specific species.'),
+  );
+  
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+
+function crawler_block_configure($delta = '') {
+  $form = array();
+    /* Configure the settings page for publication block */
+	if ($delta == 'publication') {
+	  $form['publication'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Publications Options'),
+	  );
+	  /* Creates a textfield to input number of results to display */
+	  $form['publication']['pubmed_block_count'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Publications to Display'),
+		'#default_value' => variable_get('pubmed_block_count', 3),
+	  );
+	  /* Creates a textfield to input response timeout */
+	  $form['publication']['pubmed_timeout'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Timeout'),
+		'#default_value' => variable_get('pubmed_timeout', 1),
+	  );
+	}
+	/* Configure the setting page for external links block */
+	if ($delta == 'external_link') {
+	  $form['external_link'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('External Links Options'),
+	  );
+	  /* Creates the checkboxes for displaying each link */
+	  $form['external_link']['links'] = array(
+		'#type' => 'checkboxes',
+		'#title' => t('External Links to Display'),
+		'#required' => TRUE,
+		'#options' => array(
+		  7 => t('Google'),
+		  13 => t('BHL'),
+		  21 => t('Scirus'),
+		 ),
+		'#default_value' => variable_get('links', array()),
+		'#description' => t('Filter the results.'),
+	  );
+	}
+	/* Configure the setting page for gbif distribution map block */
+	if ($delta == 'gbif_map_distribution') {
+	  $form['gbif_map_distribution'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('GBIF Distribution Options'),
+	  );
+	  /* Creates a text field to input response timeout */
+	  $form['gbif_map_distribution']['gbif_timeout'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Timeout'),
+		'#default_value' => variable_get('gbif_timeout', 2),
+	  );
+	}
+	return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function crawler_block_save($delta = '', $edit = array()) {
+  if ($delta == 'publication') {
+    variable_set('pubmed_block_count', $edit['pubmed_block_count']);
+	variable_set('pubmed_timeout', $edit['pubmed_timeout']);
+  }
+  if ($delta == 'gbif_map_distribution') {
+    variable_set('gbif_timeout', $edit['gbif_timeout']);
+  }
+  if ($delta == 'external_link') {
+    variable_set('links', $edit['links']);
+  }
+  drupal_set_message(t('Your changes have been saved.'));
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function crawler_block_view($delta= '') {
+  $block = array();
+  
+  /* Get page title */
+  if ($node = menu_get_object()) {
+	$nid = $node->nid;
+	$term = $node->title;
+  }
+  
+  switch ($delta) {
+	/* GBIF Map disribution block */
+    case 'gbif_map_distribution':
+	  $time = variable_get('gbif_timeout', 2);
+	  $url = 'http://data.gbif.org/species/'. $term .'/mapWidget?size=small';
+	  /* Set options for http request */
+      $options = array(
+        'timeout' => $time,
+      );
+	  $http_result = drupal_http_request($url, $options);
+	  if ($http_result->code == 200) {
+		$content = '<div id="crawler-side-block"><iframe src="' . $url . '" hspace="1" vspace="1" scrolling="no" width="360" height="226" frameborder="0"></iframe><div>';
+	  } else {
+		  return FALSE;
+	  }
+	  $block = array(
+        'subject' => t('GBIF Distribution'),
+        'content' => $content,
+      );
+    break;
+	
+	/* External links block */  
+	case 'external_link':
+	  $url1 = "http://scholar.google.com.my/scholar?q=" . $term . "&btnG=Search";
+	  $img1 = file_create_url(drupal_get_path('module', 'crawler') . '/img/google_scholar_logo.png');
+	  $url2 = "http://www.biodiversitylibrary.org/Search.aspx?searchTerm=" . $term . "&searchCat=";
+	  $img2 = file_create_url(drupal_get_path('module', 'crawler') . '/img/bhl_logo.jpg');
+	  $url3 = "http://www.scirus.com/srsapp/search?q=" . $term . "&t=all&sort=0&g=s";
+	  $img3 = file_create_url(drupal_get_path('module', 'crawler') . '/img/scirus_logo.jpg');
+	  
+	  $selected = array();
+	  $selected = variable_get('links', array());
+	  $content = '';
+	  if ($selected[7] == 7) {
+		  $content .= '<a href="' . $url1 . '"><img src="' . $img1 . '"></a>';
+	  }
+	  if ($selected[13] == 13) {
+		  $content .= '<a href="' . $url2 . '"><img src="' . $img2 . '"></a>';
+	  }
+	  if ($selected[21] == 21) {
+		  $content .= '<a href="' . $url3 . '"><img src="' . $img3 . '"></a>';
+	  }
+
+      $block['subject'] = t('External Links');
+      $block['content'] = $content;
+    break;
+	
+	/* Publications block */
+	case 'publication':
+	  $block['subject'] = t('Publications');
+	  $count = variable_get('pubmed_block_count', 3);
+	  $time = variable_get('pubmed_timeout', 1);
+	  $pterm = str_replace(' ', '+', $term);
+	  $url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmax=". $count ."&term=". $pterm;
+
+	  /* Set options for http request */
+      $options = array(
+        'timeout' => $time,
+      );
+	  $http_result = drupal_http_request($url, $options);
+	  
+	  if ($http_result->code == 200) {
+		$list = array();
+		$xml = simplexml_load_string($http_result->data);
+		
+		if ($xml->Count == 0) {
+			$block['content'] = t($term .'\'s publications not found.');
+			break;
+		}
+  
+		/* Loop to fetch data from the desired matching publications */
+		foreach ($xml->IdList->Id as $id) {
+		  $url2 = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=" . $id;
+		  $http_result2 = drupal_http_request($url2, $options);
+		  if ($http_result2->code != 200) {
+			  continue;
+		  }
+		  else {
+			  $xml2 = simplexml_load_string($http_result2->data);
+			  $articleTitle = $xml2->PubmedArticle->MedlineCitation->Article->ArticleTitle;
+			  $articleUrl = 'Title: <a href="http://www.ncbi.nlm.nih.gov/pubmed/' . $id . '">' . $articleTitle . '</a>';
+			  $authors = 'Authors: ';
+			  $pmid = 'PMID: ' . $id;
+			  /* Loop to fetch all authors from the xml in each publication match */
+			  foreach ($xml2->PubmedArticle->MedlineCitation->Article->AuthorList->Author as $author) {
+				$authors .= $author->LastName . ' ' . $author->Initials . '. ';
+			  }
+			  $pub = $articleUrl . '<br>' . $authors . '<br>' . $pmid;
+			  array_push($list, $pub);
+		  }
+		}
+		end($list);
+		$key = key($list);
+		reset($list);
+		$list[$key] .= '<br /><br /><a href="http://www.ncbi.nlm.nih.gov/pubmed/?term=' . $pterm . '">More..</a>';
+		
+		$theme_args = array('items' => $list, 'type' => 'ol');
+		$content = theme('item_list', $theme_args);
+		$block['content'] = $content;
+	  }
+	  else {
+		  $block['content'] = t('No publications from PubMed found on ' . $term);
+	  }
+		
+    break;
+	
+	/* IUCN Red list block */
+    case 'iucn_red_list':
+	  /* Declare and import js file to module */
+      drupal_add_js(drupal_get_path('module', 'crawler') . '/js/crawler.js');
+	  /* Pass value of page title from module to js */
+	  drupal_add_js(array('crawler' => array('title' => $term)), 'setting');
+      $content = '<div id="name"></div><div id="summary">Loading..</div><div id="summary_justification"></div><div id="full_result"></div>';
+	  $block = array(
+        'subject' => t('IUCN Red List'),
+        'content' => $content,
+      );
+    break;
+  }
+  return $block;
+}
