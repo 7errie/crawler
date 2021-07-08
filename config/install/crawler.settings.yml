@@ -1,0 +1,10 @@
+# crawler.settings.yml
+block_setting:
+  gbif:
+    size:
+      width: '400'
+      height: '250'
+  publication:
+    api_key: '933b3be2e22e19dca6055bff12aae323'
+  iucn:
+    api_key: '9bb4facb6d23f48efbf424bb05c0c1ef1cf6f468393bc745d42179ac4aca5fee'

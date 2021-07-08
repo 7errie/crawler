@@ -1,0 +1,10 @@
+# crawler.routing.yml
+crawler.settings:
+  path: '/admin/config/crawler'
+  defaults:
+    _form: '\Drupal\crawler\Form\CrawlerSettingsForm'
+    _title: 'Crawler configuration'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE

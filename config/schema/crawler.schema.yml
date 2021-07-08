@@ -1,0 +1,33 @@
+# crawler.schema.yml
+block_setting:
+  type: config_object
+  label: 'Crawler settings'
+  mapping:
+    gbif:
+      type: mapping
+      label: 'GBIF'
+      mapping:
+        size:
+          type: mapping
+          label: 'Map size'
+          mapping:
+            width:
+              type: string
+              label: 'Width'
+            height:
+              type: string
+              label: 'Height'
+    publication:
+      type: mapping
+      label: 'Publication'
+      mapping:
+        api_key:
+          type: string
+          label: 'Key'
+    iucn:
+      type: mapping
+      label: 'IUCN'
+      mapping:
+        api_key:
+          type: string
+          label: 'Token'

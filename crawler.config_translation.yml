@@ -1,0 +1,6 @@
+# crawler.config_translation.yml
+crawler.admin.config:
+  title: 'Crawler Configuration'
+  base_route_name: crawler.admin.config
+  names:
+    - crawler.settings

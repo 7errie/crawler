@@ -1,0 +1,18 @@
+name: Crawler
+type: module
+description: BIRG customized Drupal module that imports data from various portals and displays them for content use.
+package: Custom
+core_version_requirement: ^8.8 || ^9
+
+dependencies:
+# - drupal:leaflet
+
+test_dependencies:
+# - drupal:image
+
+configure: crawler.settings
+
+php: 7.0
+
+hidden: false
+required: false

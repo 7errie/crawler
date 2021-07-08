@@ -1,0 +1,7 @@
+# crawler.links.menu.yml
+crawler.settings:  
+  title: 'Crawler configuration'  
+  route_name: crawler.settings  
+  description: 'Crawler API and block display configuration'
+  parent: system.admin_config_system  
+  weight: 99

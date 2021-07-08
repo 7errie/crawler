@@ -1,0 +1,7 @@
+{
+    "name": "drupal/crawler",
+    "description": "BIRG customized Drupal module which imports data from various databases and display them as a page content.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "require": {}
+}

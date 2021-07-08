@@ -1,0 +1,5 @@
+# crawler.links.task.yml
+crawler.settings:
+  route_name: crawler.settings
+  title: Settings
+  base_route: crawler.settings

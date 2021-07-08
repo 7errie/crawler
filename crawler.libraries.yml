@@ -1,0 +1,12 @@
+# crawler.libraries.yml
+occurrence_js:
+  version: 1.x
+  js:
+    src/Library/crawler.js: {}
+    src/Library/leaflet.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+  css:
+    layout:
+      src/Library/leaflet.css: {}
