@@ -27,7 +27,7 @@ class OccurrenceMapBlock extends BlockBase
    */
   public function build()
   {
-    /* Get page title */
+    /** Get page title */
     $request = \Drupal::request();
     if ($route = $request->attributes->get(\Symfony\Cmf\Component\Routing\RouteObjectInterface::ROUTE_OBJECT)) {
       $title = \Drupal::service('title_resolver')->getTitle($request, $route);
@@ -40,11 +40,12 @@ class OccurrenceMapBlock extends BlockBase
     $taxonkey = '';
     $name = '';
 
-    /* Get configs */
+    /** Get configs */
     $config = \Drupal::config('crawler.settings');
     $h = $config->get('block_setting.gbif.size.height');
     $w = $config->get('block_setting.gbif.size.width');
     
+    /** Set height and width if the user config is empty */
     if (empty($h)) {
       $h = '250';
     }
@@ -52,17 +53,19 @@ class OccurrenceMapBlock extends BlockBase
       $w = '400';
     }
     
-    /* Set options for http request */
+    /** Set options for http request */
     $options = array(
       'timeout' => $time,
     );
     try {
+      /** Open connection to gbif api and fetch xml */
       $response = \Drupal::httpClient()->get($surl);
       $data = json_decode((string) $response->getBody());
 
       if (empty($data) || $data->results[0] == '') {
         return;
       }
+      /** Loop the xml and fetch gbif id */
       foreach ($data as $d) {
         if (!empty($d[0]->key)) {
           $key = $d[0]->key;
@@ -70,6 +73,7 @@ class OccurrenceMapBlock extends BlockBase
         }
       }
       try {
+        /** Fetch species specific occurrence using the gbif id */
         $response = \Drupal::httpClient()->get($ourl.$key);
         $data = json_decode((string) $response->getBody());
         
@@ -90,6 +94,7 @@ class OccurrenceMapBlock extends BlockBase
       return $e;
     }
 
+    /** Declare the properties of the occurrence map block */
     $build = [];
     $build[] = array(
       '#type' => 'markup',
@@ -101,6 +106,7 @@ class OccurrenceMapBlock extends BlockBase
         ],
       ],
     );
+    /** Assign the gbif occurrence data to the map block */
     $build['#attached']['drupalSettings']['crawler']['gbif'] = $taxonkey;
     $build['#attached']['drupalSettings']['crawler']['gbif_sp_name'] = $name;
     return $build;

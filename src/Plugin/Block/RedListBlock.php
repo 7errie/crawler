@@ -61,12 +61,12 @@ class RedListBlock extends BlockBase {
     
 	  $time = 1;
 
-	  /* Set options for http request */
+	  /** Set options for http request */
     $options = array(
       'timeout' => $time,
     );
 
-    /* Get configs */
+    /** Get configs */
     $config = \Drupal::config('crawler.settings');
     $key = $config->get('block_setting.iucn.api_key');
 
@@ -75,11 +75,13 @@ class RedListBlock extends BlockBase {
 
     $content = '';
     try {
+      /** Block access if iucn api key is not set in the module setting */
       if (empty($key)) {
         $content .= 'Invalid token.';
         \Drupal::messenger()->addMessage('API token required. Please get the key and save it in the crawler configuration page.', MessengerInterface::TYPE_ERROR);
         return;
       }
+      /** Open connection with iucn server and fetch species common name and iucn status */
       $response = \Drupal::httpClient()->get($url, array('headers' => array('Accept' => 'application/xml')));
       $data = json_decode((string) $response->getBody());
 
@@ -92,6 +94,7 @@ class RedListBlock extends BlockBase {
       }
 
       try {
+        /** Open another connection with iucn server and fetch threats text */
         $response = \Drupal::httpClient()->get($url2, array('headers' => array('Accept' => 'application/json')));
         $data = json_decode((string) $response->getBody());
         if (empty($data) || $data->result[0] == '') {
@@ -110,6 +113,7 @@ class RedListBlock extends BlockBase {
       return $e;
     }
     
+    /** Embed the html script with the data into the red list block */
     $build = [];
     $build[] = array(
       '#type' => 'markup',

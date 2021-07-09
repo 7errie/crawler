@@ -29,7 +29,7 @@ class PubsBlock extends BlockBase
   
   public function build()
   {
-    /* Get page title */
+    /** Get page title */
     $request = \Drupal::request();
     if ($route = $request->attributes->get(\Symfony\Cmf\Component\Routing\RouteObjectInterface::ROUTE_OBJECT)) {
       $title = \Drupal::service('title_resolver')->getTitle($request, $route);
@@ -37,12 +37,12 @@ class PubsBlock extends BlockBase
 
     $time = 1;
 
-    /* Set options for http request */
+    /** Set options for http request */
     $options = array(
       'timeout' => $time,
     );
 
-    /* Get configs */
+    /** Get configs */
     $config = \Drupal::config('crawler.settings');
     $key = $config->get('block_setting.publication.api_key');
 
@@ -50,11 +50,13 @@ class PubsBlock extends BlockBase
 
     $list = '';
     try {
+      /** Block access if scopus api key is not set */
       if (empty($key)) {
         $list .= 'Invalid API key.';
         \Drupal::messenger()->addMessage('API key required. Please get the key and save it in the crawler configuration page.', MessengerInterface::TYPE_ERROR);
         return;
       }
+      /** Open connection with scopus api and fetch publication list */
       $response = \Drupal::httpClient()->get($url, array('headers' => array('Accept' => 'application/json')));
       $data = json_decode((string) $response->getBody(), true);
 
@@ -63,7 +65,9 @@ class PubsBlock extends BlockBase
       }
       
       foreach ($data as $key => $value) {
-        for ($i=0;$i<count($value["entry"]);$i++) { /* Loop through the publications found */
+        /** Loop through the publications list */
+        for ($i=0;$i<count($value["entry"]);$i++) {
+          /** Append each publication data to variable */
           if (!empty($value["entry"][$i]["pii"])) {
             $articleUrl = '<h5><a href="https://www.sciencedirect.com/science/article/abs/pii/' . $value["entry"][$i]["pii"] . '">' . $value["entry"][$i]["dc:title"] . ' (' . $value["entry"][$i]["dc:creator"] . ', ' . substr($value["entry"][$i]["prism:coverDate"],0,4) . ')</a></h5>';
           } else {
@@ -74,10 +78,10 @@ class PubsBlock extends BlockBase
         }
       }
       $list.= '<br /><br /><a href="https://www.sciencedirect.com/search?qs=' . $title . '">More..</a>';
-      //echo '<script>console.log('.json_encode($list).')</script>';
     } catch (RequestException $e) {
       return $e;
     }
+    /** Embed the html script with the data into the publication block */
     $build = [];
     $build[] = array(
       '#type' => 'markup',
